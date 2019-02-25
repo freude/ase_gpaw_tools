@@ -3,7 +3,7 @@ from ase.io import read, write
 
 
 def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw',
-                       silicon='/home/mk/gpaw_swarm/gpaw_comp/relaxed_slab_cons3.gpw'):
+                       silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw'):
 
     # read a tetracaene cell and make a slab out of it
     tc_slab = read(molecules)
@@ -26,7 +26,7 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw
     cell[2, 2] = cell[0, 0]
     cell[0, 0] = cell[1, 1]
     silicon_slab.set_cell(cell)
-    silicon_slab.rotate(90, 'y', center=(0, 0, 0))
+    # silicon_slab.rotate(90, 'y', center=(0, 0, 0))
     silicon_slab.wrap()
     silicon_slab.set_pbc((1, 1, 0))
     silicon_slab = silicon_slab.repeat((3, 1, 1))
