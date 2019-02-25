@@ -56,11 +56,11 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw
 
     # del interface[interface.positions[:, 2] > 33]
 
-    # view(interface, viewer='vmd')
-    view(interface)
-    print('hi')
+    return interface
 
 
 if __name__ == '__main__':
 
-    supercell_standing()
+    interface = supercell_standing()
+    # view(interface, viewer='vmd')
+    view(interface)
