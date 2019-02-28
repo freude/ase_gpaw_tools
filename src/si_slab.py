@@ -244,9 +244,52 @@ def make_slab(a_si, width, axis=2, vacuum=10):
     outfile.close()
 
 
+def make_slab_111(a_si, width, axis=2, vacuum=10):
+
+    from ase.build import bulk
+    from ase.visualize import view
+    from ase.build import diamond111
+
+    si = diamond111('Si', size=(2, 2, width), a=a_si)
+    si.center(axis=axis, vacuum=vacuum)
+
+    cell = si.get_cell()
+    cell[1, 0] = 0.0
+    si.set_cell(cell)
+    si.wrap()
+
+    bottom_surface = np.min(si.positions[:, 2])
+    top_surface = np.max(si.positions[:, 2])
+
+    for atom in si:
+
+        if np.abs(atom.position[2] - bottom_surface) < 0.01:
+            atom.symbol = 'H'
+            atom.position[2] += 0.5
+
+        if np.abs(atom.position[2] - top_surface) < 0.01:
+            atom.symbol = 'H'
+            atom.position[2] -= 0.5
+
+    # def zero(x):
+    #     return np.min(x * 0)
+    #
+    # si = passivate_surface_ase(si, 'H', [zero, zero, np.max])
+    # passivate_surface_ase(si, 'H', [zero, zero, np.min])
+
+    view(si)
+
+    import pickle
+
+    outfile = open('si_slab111_' + str(width) + '.pkl', 'wb')
+    pickle.dump(si, outfile)
+    outfile.close()
+
+
 if __name__ == '__main__':
 
     atoms = read('si_bulk.gpw', format='gpw')
     a_si = np.sum(atoms.get_cell()[0])
 
-    make_slab(a_si, 3)
+    # make_slab(a_si, 3)
+    make_slab_111(a_si, 14)
