@@ -211,6 +211,34 @@ def passivate_surface_ase(atoms, elem, plane):
             ans = kd_tree.get_neighbours(coord)
 
             atoms1 = add_atoms(coord, coords_cart[ans])
+            # coord, atoms1 = make_canted(coord, coords_cart[ans], atoms1)
+
+            for atom in atoms1:
+                a = atom.tolist()
+                atoms.append(Atom(elem, a))
+
+    return atoms
+
+
+def passivate_surface_ase_2x1(atoms, elem, plane):
+
+    atom_list = []
+    cell = np.diag(atoms.get_cell())
+    coords = atoms.get_scaled_positions()
+    coords_cart = atoms.get_positions()
+
+    for j in range(3):
+        plane[j] = plane[j](coords[:, j])
+
+    coords_cart = np.array(coords_cart)
+
+    kd_tree = KdTree(coords_cart)
+
+    for j, coord in enumerate(coords_cart):
+        if belong_to_surface(coords[j], plane):
+            ans = kd_tree.get_neighbours(coord)
+
+            atoms1 = add_atoms(coord, coords_cart[ans])
             coord, atoms1 = make_canted(coord, coords_cart[ans], atoms1)
 
             for atom in atoms1:
@@ -291,5 +319,5 @@ if __name__ == '__main__':
     atoms = read('si_bulk.gpw', format='gpw')
     a_si = np.sum(atoms.get_cell()[0])
 
-    # make_slab(a_si, 3)
-    make_slab_111(a_si, 14)
+    make_slab(a_si, 4)
+    # make_slab_111(a_si, 14)

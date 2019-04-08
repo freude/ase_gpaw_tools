@@ -2,8 +2,10 @@ from ase.visualize import view
 from ase.io import read, write
 
 
-def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw',
-                       silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw'):
+def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw',
+                       silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw',
+                       si_supercell=(3, 1, 1),
+                       tc_supercell=(2, 1, 2)):
 
     # read a tetracaene cell and make a slab out of it
     tc_slab = read(molecules)
@@ -14,7 +16,7 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw
     params[5] = 90.0
     tc_slab.set_cell(params, scale_atoms=True)
     tc_slab.wrap()
-    tc_slab = tc_slab.repeat((2, 1, 2))
+    tc_slab = tc_slab.repeat(tc_supercell)
     tc_slab.translate((-2.488, 0, 0))
     tc_slab.translate((0, 0, 7))
     tc_slab.wrap()
@@ -29,7 +31,7 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw
     # silicon_slab.rotate(90, 'y', center=(0, 0, 0))
     silicon_slab.wrap()
     silicon_slab.set_pbc((1, 1, 0))
-    silicon_slab = silicon_slab.repeat((3, 1, 1))
+    silicon_slab = silicon_slab.repeat(si_supercell)
     # view(silicon_slab)
 
     p_si = silicon_slab.get_positions()
@@ -59,7 +61,7 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw
     return interface
 
 
-def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.gpw',
+def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw',
                           silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw'):
 
     # read a tetracaene cell and make a slab out of it
@@ -118,7 +120,7 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp1/relaxed_mol.
 
 if __name__ == '__main__':
 
-    # interface = supercell_standing()
-    interface = supercell_standing111()
+    interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
+    # interface = supercell_standing111()
     # view(interface, viewer='vmd')
     view(interface)
