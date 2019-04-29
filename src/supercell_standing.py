@@ -64,19 +64,7 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw'
 def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw',
                           silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw'):
 
-    # read a tetracaene cell and make a slab out of it
-    tc_slab = read(molecules)
 
-    params = tc_slab.get_cell_lengths_and_angles()
-    params[3] = 90.0
-    params[4] = 90.0
-    params[5] = 90.0
-    tc_slab.set_cell(params, scale_atoms=True)
-    tc_slab.wrap()
-    tc_slab = tc_slab.repeat((1, 1, 2))
-    tc_slab.translate((-2.488, 0, 0))
-    tc_slab.translate((0, 0, 7))
-    tc_slab.wrap()
 
     # read from file a relaxed silicon slab
     silicon_slab = read(silicon)
@@ -92,16 +80,28 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.g
     # view(silicon_slab)
 
     p_si = silicon_slab.get_positions()
-    p_tc = tc_slab.get_positions()
-    shift = 1.0
-    shift = p_si[:, 2].max() - p_tc[:, 2].min() + shift
-    tc_slab.translate((0, 0, shift))
 
+    # read a tetracaene cell and make a slab out of it
+    tc_slab = read(molecules)
     params_tc = tc_slab.get_cell_lengths_and_angles()
     params_si = silicon_slab.get_cell_lengths_and_angles()
     params_tc[1] = params_si[1]
     params_tc[0] = params_si[0]
     tc_slab.set_cell(params_tc, scale_atoms=True)
+    tc_slab = tc_slab.repeat((1, 1, 2))
+    tc_slab.translate((-2.488, 0, 0))
+    tc_slab.translate((0, 0, 6.5))
+    tc_slab.wrap()
+    params = tc_slab.get_cell_lengths_and_angles()
+    params[3] = 90.0
+    params[4] = 90.0
+    params[5] = 90.0
+    tc_slab.set_cell(params, scale_atoms=False)
+    tc_slab.wrap()
+    p_tc = tc_slab.get_positions()
+    shift = 1.0
+    shift = p_si[:, 2].max() - p_tc[:, 2].min() + shift
+    tc_slab.translate((0, 0, shift))
 
     interface = silicon_slab.copy()
     interface.extend(tc_slab)
@@ -120,7 +120,7 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.g
 
 if __name__ == '__main__':
 
-    interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
-    # interface = supercell_standing111()
+    # interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
+    interface = supercell_standing111()
     # view(interface, viewer='vmd')
     view(interface)
