@@ -254,7 +254,7 @@ def make_slab(a_si, width, axis=2, vacuum=10):
     from ase.visualize import view
 
     si = bulk('Si', 'diamond', a_si, cubic=True)
-    si = si.repeat((1, 1, width))
+    si = si.repeat((5, 5, width))
     si.center(axis=axis, vacuum=vacuum)
 
     def zero(x):
@@ -319,5 +319,5 @@ if __name__ == '__main__':
     atoms = read('si_bulk.gpw', format='gpw')
     a_si = np.sum(atoms.get_cell()[0])
 
-    make_slab(a_si, 4)
-    # make_slab_111(a_si, 14)
+    # make_slab(a_si, 4)
+    make_slab_111(a_si, 14)

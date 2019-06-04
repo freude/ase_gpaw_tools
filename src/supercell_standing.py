@@ -62,9 +62,8 @@ def supercell_standing(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw'
 
 
 def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.gpw',
-                          silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw'):
-
-
+                          silicon='/home/mk/gpaw_swarm/gpaw_comp/si_slab_libvdwxc/relaxed_si_slab3_3.gpw',
+                          angle=0):
 
     # read from file a relaxed silicon slab
     silicon_slab = read(silicon)
@@ -74,9 +73,10 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.g
     # cell[0, 0] = cell[1, 1]
     # silicon_slab.set_cell(cell)
     # silicon_slab.rotate(90, 'y', center=(0, 0, 0))
+    silicon_slab.rotate(angle, 'z', center=(0, 0, 0))
     silicon_slab.wrap()
     silicon_slab.set_pbc((1, 1, 0))
-    # silicon_slab = silicon_slab.repeat((3, 1, 1))
+    # silicon_slab = silicon_slab.repeat((2, 1, 1))
     # view(silicon_slab)
 
     p_si = silicon_slab.get_positions()
@@ -88,7 +88,8 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.g
     params_tc[1] = params_si[1]
     params_tc[0] = params_si[0]
     tc_slab.set_cell(params_tc, scale_atoms=True)
-    tc_slab = tc_slab.repeat((1, 1, 2))
+
+    tc_slab = tc_slab.repeat((1, 1, 3))
     tc_slab.translate((-2.488, 0, 0))
     tc_slab.translate((0, 0, 6.5))
     tc_slab.wrap()
@@ -121,6 +122,6 @@ def supercell_standing111(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_mol.g
 if __name__ == '__main__':
 
     # interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
-    interface = supercell_standing111()
+    interface = supercell_standing111(silicon = '/home/mk/gpaw_swarm/relaxed_si_slab111_14.gpw')
     # view(interface, viewer='vmd')
     view(interface)
