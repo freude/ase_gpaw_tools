@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
 import scipy.spatial
-from ase.io import read
+from ase.io import read, write
 from ase import Atom
 
 
@@ -316,8 +316,27 @@ def make_slab_111(a_si, width, axis=2, vacuum=10):
 
 if __name__ == '__main__':
 
-    atoms = read('si_bulk.gpw', format='gpw')
-    a_si = np.sum(atoms.get_cell()[0])
+    # atoms = read('si_bulk.gpw', format='gpw')
+    # a_si = np.sum(atoms.get_cell()[0])
+    #
+    # # make_slab(a_si, 4)
+    # make_slab_111(a_si, 14)
 
-    # make_slab(a_si, 4)
-    make_slab_111(a_si, 14)
+    atoms = read('/home/mk/ase_gpaw_tools/src/si_slab_100_1x2.xyz', format='xyz')
+    atoms.set_cell([7.9, 7.9/2, 55], scale_atoms=False)
+    atoms.translate((-np.min(atoms.positions[:, 0]), 0, 0.0))
+    atoms.translate((0, -np.min(atoms.positions[:, 1]), 0.0))
+    atoms.rotate(45, 'z', center=(0, 0, 0))
+    atoms.translate((-np.min(atoms.positions[:, 0])-0.648, 0, 0.0))
+    atoms.translate((0, -np.min(atoms.positions[:, 1]), 0.0))
+    atoms.set_pbc((1, 1, 0))
+    del atoms[[atom.index for atom in atoms if atom.position[1] > 2]]
+    atoms.write('si_slab_1xw_min.struct', format='struct')
+    from ase.visualize import view
+    view(atoms)
+
+    atoms1 = read('si_slab_1xw_min.struct', format='struct')
+    atoms1 = atoms1.repeat((1, 3, 1))
+    view(atoms1)
+
+
