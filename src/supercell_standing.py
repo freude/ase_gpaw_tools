@@ -181,8 +181,7 @@ def supercell_standing_1x2_min(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_
 if __name__ == '__main__':
 
     # interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
-    # interface = supercell_standing111(silicon = '/home/mk/gpaw_swarm/relaxed_si_slab111_14.gpw')
+    # interface = supercell_standing111(silicon='/home/mk/gpaw_swarm/relaxed_si_slab111_14.gpw')
     interface = supercell_standing_1x2_min(silicon='si_slab_1xw_min.struct')
     # view(interface, viewer='vmd')
-
     view(interface)

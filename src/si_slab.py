@@ -182,7 +182,6 @@ def make_canted(coord, coords, atoms):
 
 
 def fold_into(a1, cell):
-
     for j in range(3):
         if a1[j] < 0:
             a1[j] += cell[j]
@@ -193,7 +192,6 @@ def fold_into(a1, cell):
 
 
 def passivate_surface_ase(atoms, elem, plane):
-
     atom_list = []
     cell = np.diag(atoms.get_cell())
     coords = atoms.get_scaled_positions()
@@ -221,7 +219,6 @@ def passivate_surface_ase(atoms, elem, plane):
 
 
 def passivate_surface_ase_2x1(atoms, elem, plane):
-
     atom_list = []
     cell = np.diag(atoms.get_cell())
     coords = atoms.get_scaled_positions()
@@ -249,7 +246,6 @@ def passivate_surface_ase_2x1(atoms, elem, plane):
 
 
 def make_slab(a_si, width, axis=2, vacuum=10):
-
     from ase.build import bulk
     from ase.visualize import view
 
@@ -273,7 +269,6 @@ def make_slab(a_si, width, axis=2, vacuum=10):
 
 
 def make_slab_111(a_si, width, axis=2, vacuum=10):
-
     from ase.build import bulk
     from ase.visualize import view
     from ase.build import diamond111
@@ -314,29 +309,63 @@ def make_slab_111(a_si, width, axis=2, vacuum=10):
     outfile.close()
 
 
-if __name__ == '__main__':
+def extend_by_a_slice(atoms, cut, lattice_vector, axis=2):
+    first_cut = cut
+    second_cut = cut + lattice_vector
 
-    # atoms = read('si_bulk.gpw', format='gpw')
-    # a_si = np.sum(atoms.get_cell()[0])
-    #
-    # # make_slab(a_si, 4)
-    # make_slab_111(a_si, 14)
+    indices = []
 
+    for atom in atoms:
+        if first_cut < atom.position[axis] < second_cut:
+            indices.append(atom.index)
+
+    atom_buffer = atoms[indices]
+
+    for atom in atoms:
+        if atom.position[axis] > first_cut:
+            atom.position[axis] += lattice_vector
+
+    atoms.extend(atom_buffer)
+    return atoms
+
+
+def make_slab_100_1x2(num_periods, vacuum=10):
     atoms = read('/home/mk/ase_gpaw_tools/src/si_slab_100_1x2.xyz', format='xyz')
-    atoms.set_cell([7.9, 7.9/2, 55], scale_atoms=False)
+
+    num_periods = num_periods - 3
+    while num_periods > 0:
+        atoms = extend_by_a_slice(atoms, 0.5 * (19.57 - 18.21) + 18.21, 5.473)
+        num_periods -= 1
+    atoms_extent = np.max(atoms.positions[:, 2]) - np.min(atoms.positions[:, 2])
+    cell_z_size = atoms_extent + vacuum
+    atoms.set_cell([7.9, 7.9 / 2, cell_z_size], scale_atoms=False)
     atoms.translate((-np.min(atoms.positions[:, 0]), 0, 0.0))
     atoms.translate((0, -np.min(atoms.positions[:, 1]), 0.0))
     atoms.rotate(45, 'z', center=(0, 0, 0))
-    atoms.translate((-np.min(atoms.positions[:, 0])-0.648, 0, 0.0))
+    atoms.translate((-np.min(atoms.positions[:, 0]) - 0.648, 0, 0.0))
     atoms.translate((0, -np.min(atoms.positions[:, 1]), 0.0))
+    atoms.translate((0, 0, -np.min(atoms.positions[:, 2]) - 0.5 * atoms_extent + cell_z_size * 0.5))
     atoms.set_pbc((1, 1, 0))
     del atoms[[atom.index for atom in atoms if atom.position[1] > 2]]
-    atoms.write('si_slab_1xw_min.struct', format='struct')
+
+    return atoms
+
+
+if __name__ == '__main__':
+
     from ase.visualize import view
-    view(atoms)
+    import pickle
 
-    atoms1 = read('si_slab_1xw_min.struct', format='struct')
-    atoms1 = atoms1.repeat((1, 3, 1))
-    view(atoms1)
+    for i in range(4, 20):
+        atoms = make_slab_100_1x2(i, vacuum=37)
 
+        write('si_slab_100_1x2_' + str(i) + '.struct', atoms, format='struct')
+        si_slab = read('si_slab_100_1x2_' + str(i) + '.struct', format='struct')
 
+        # with open('si_slab_100_1x2_' + str(i) + '.pkl', 'wb') as outfile:
+        #     pickle.dump(atoms, outfile)
+        #
+        # with open('si_slab_100_1x2_' + str(i) + '.pkl', 'rb') as infile:
+        #     si_slab = pickle.load(infile)
+
+        view(si_slab)
