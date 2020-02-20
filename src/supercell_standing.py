@@ -150,7 +150,7 @@ def supercell_standing_1x2_min(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_
 
     tc_slab = tc_slab.repeat(tc_supercell)
     tc_slab.translate((-2.488, 0, 0))
-    tc_slab.translate((0, 0, 6.5))
+    tc_slab.translate((0, 0, 6.4))
     tc_slab.wrap()
     params = tc_slab.get_cell_lengths_and_angles()
     params[3] = 90.0
@@ -159,7 +159,7 @@ def supercell_standing_1x2_min(molecules='/home/mk/gpaw_swarm/gpaw_comp/relaxed_
     tc_slab.set_cell(params, scale_atoms=False)
     tc_slab.wrap()
     p_tc = tc_slab.get_positions()
-    shift = 2.0
+    shift = 1.5
     shift = p_si[:, 2].max() - p_tc[:, 2].min() + shift
     tc_slab.translate((0, 0, shift))
 
@@ -182,6 +182,6 @@ if __name__ == '__main__':
 
     # interface = supercell_standing(silicon='/home/mk/ase_gpaw_tools/src/relaxed_si_slab_1x2.gpw')
     # interface = supercell_standing111(silicon='/home/mk/gpaw_swarm/relaxed_si_slab111_14.gpw')
-    interface = supercell_standing_1x2_min(silicon='si_slab_1xw_min.struct')
+    interface = supercell_standing_1x2_min(silicon='si_slab_1xw_min.struct', molecules='../tetracene.cif')
     # view(interface, viewer='vmd')
     view(interface)
