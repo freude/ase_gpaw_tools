@@ -148,8 +148,11 @@ def xml2atoms(xml_elem):
                                     ibzkpts=ibzkpts)
     # calc.kpts = kpts
     atoms.calc = calc
+    ecut = None
+    if xml_elem.find('basis_set') is not None:
+        ecut = 2*float(xml_elem.find('basis_set').find('ecutwfc').text)
 
-    return atoms
+    return atoms, ecut
 
 
 def read_qe_xml(fileobj, index=-1, results_required=True):
@@ -187,7 +190,7 @@ def read_qe_xml(fileobj, index=-1, results_required=True):
     output = root.find('output')
     steps = root.findall('step')
 
-    atoms = xml2atoms(output)
+    atoms, ecut = xml2atoms(output)
 
     trajectory = None
 
@@ -195,12 +198,13 @@ def read_qe_xml(fileobj, index=-1, results_required=True):
     atoms_list = []
 
     for step in steps:
-        trajectory.write(xml2atoms(step))
-        atoms_list.append(xml2atoms(step))
+        aaa, _ = xml2atoms(step)
+        trajectory.write(aaa)
+        atoms_list.append(aaa)
 
     trajectory.close()
 
-    return atoms, atoms_list
+    return atoms, ecut, atoms_list
 
 
 if __name__ == '__main__':
@@ -214,8 +218,8 @@ if __name__ == '__main__':
     # atoms, atoms_list1 = read_qe_xml(file_name1)
     # atoms, atoms_list2 = read_qe_xml(file_name2)
     # atoms_list = atoms_list1+atoms_list2
-    atoms, atoms_list = read_qe_xml(file_name)
-    atoms1, atoms_list1 = read_qe_xml(file_name1)
+    atoms, ecut, atoms_list = read_qe_xml(file_name)
+    atoms1, ecut, atoms_list1 = read_qe_xml(file_name1)
 
     # print(len(atoms_list))
     # view(atoms_list)
