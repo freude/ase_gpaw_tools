@@ -61,7 +61,7 @@ def xml2atoms(xml_elem):
     # Fermi level / highest occupied level
     efermi = None
     if xml_elem.find('band_structure') is not None:
-        efermi = float(xml_elem.find('band_structure').find('fermi_energy').text)
+        efermi = 2*float(xml_elem.find('band_structure').find('fermi_energy').text) * units['Ry']
 
     # # K-points
     ibzkpts = None
