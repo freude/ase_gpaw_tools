@@ -148,11 +148,18 @@ def xml2atoms(xml_elem):
                                     ibzkpts=ibzkpts)
     # calc.kpts = kpts
     atoms.calc = calc
-    ecut = None
-    if xml_elem.find('basis_set') is not None:
-        ecut = 2*float(xml_elem.find('basis_set').find('ecutwfc').text)
 
-    return atoms, ecut
+    input_parameters = {}
+
+    input_parameters['ecut'] = None
+    if xml_elem.find('basis_set') is not None:
+        input_parameters['ecut'] = 2*float(xml_elem.find('basis_set').find('ecutwfc').text)
+
+    input_parameters['input_dft'] = None
+    if xml_elem.find('dft') is not None:
+        input_parameters['input_dft'] = xml_elem.find('dft').find('functional').text
+
+    return atoms, input_parameters
 
 
 def read_qe_xml(fileobj, index=-1, results_required=True):
@@ -190,7 +197,7 @@ def read_qe_xml(fileobj, index=-1, results_required=True):
     output = root.find('output')
     steps = root.findall('step')
 
-    atoms, ecut = xml2atoms(output)
+    atoms, input_parameters = xml2atoms(output)
 
     trajectory = None
 
@@ -204,7 +211,7 @@ def read_qe_xml(fileobj, index=-1, results_required=True):
 
     trajectory.close()
 
-    return atoms, ecut, atoms_list
+    return atoms, input_parameters, atoms_list
 
 
 if __name__ == '__main__':
