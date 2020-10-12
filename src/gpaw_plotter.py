@@ -373,6 +373,110 @@ def main4():
     plt.show()
 
 
+def main5():
+
+    # # load tc slab with ghost atoms
+    # calc = GPAW('/home/mk/nci/tc/tc_part_ghosts_4x2.gpw', txt=None)
+    # ps1 = calc.get_electrostatic_potential()
+    # # ps1 = np.mean(calc.get_electrostatic_potential(), axis=(0, 1))
+    # # nt1 = calc.get_pseudo_density()
+    # # hl1 = calc.get_homo_lumo()
+    # # fl1 = calc.get_fermi_level()
+    #
+    # # load si slab with ghost atoms
+    # calc = GPAW('/home/mk/nci/si/si_part_ghosts.gpw', txt=None)
+    # # ps2 = np.mean(calc.get_electrostatic_potential(), axis=(0, 1))
+    # # nt2 = calc.get_pseudo_density()
+    # ps2 = calc.get_electrostatic_potential()
+    #
+    # # load tc slab without ghost atoms
+    # calc = GPAW('/home/mk/nci/tc/tc_part.gpw', txt=None)
+    # # ps3 = np.mean(calc.get_electrostatic_potential(), axis=(0, 1))
+    # # nt3 = calc.get_pseudo_density()
+    # ps3 = calc.get_electrostatic_potential()
+    #
+    # # load si slab without ghost atoms
+    # calc = GPAW('/home/mk/nci/si/si_part.gpw', txt=None)
+    # # ps4 = np.mean(calc.get_electrostatic_potential(), axis=(0, 1))
+    # # nt4 = calc.get_pseudo_density()
+    # ps4 = calc.get_electrostatic_potential()
+
+    # load joint slab
+    calc = GPAW('/home/mk/nci/standing82_linearsearch.gpw', txt=None)
+    # nt = np.mean(calc.get_pseudo_density(), axis=(0, 1))
+    # ps = np.mean(calc.get_electrostatic_potential(), axis=(0, 1))
+    ps = calc.get_electrostatic_potential()
+
+    # --------------------------- plot density change -----------------------------
+
+    x1 = np.linspace(0, calc.atoms.get_cell_lengths_and_angles()[2], len(ps) // 2)
+    x2 = np.linspace(0, calc.atoms.get_cell_lengths_and_angles()[2], len(ps))
+
+    # plt.figure(figsize=(12, 4))
+    # # with ghosts atoms
+    # plt.plot(x1 / 10 - 3.391, 10 * (nt - np.mean(nt1, axis=(0, 1)) - np.mean(nt2, axis=(0, 1))), 'k')
+    # # without ghosts atoms
+    # plt.plot(x1 / 10 - 3.391, 10 * (nt - np.mean(nt3, axis=(0, 1)) - np.mean(nt4, axis=(0, 1))), 'k--')
+    #
+    # plt.ylabel(r'$\Delta$ n (e/nm$^{-1}$)', fontsize=12)
+    # plt.xlabel(r'Distance from interface (nm)', fontsize=12)
+    # plt.legend(["with counterpoise correction", "without counterpoise correction"])
+    # plt.show()
+
+    # --------------------- interpolate and plot potential ------------------------
+
+    ps = np.mean(ps, axis=(0, 1))
+
+    from scipy.interpolate import interp1d
+    my_interpolating_function = interp1d(calc.hamiltonian.gd.coords(2), ps[::2],
+                                         kind='cubic',
+                                         fill_value="extrapolate")
+
+    num_e = 1000
+    coords = calc.atoms.get_positions()    # get atomic coordinates
+    ind = np.argsort(coords[:, 2])         # get atomic coordinates
+
+    num_atoms = len(coords)                # number of atoms
+    num_points = 80                        # number of points along one of dimensions
+
+    z = np.linspace(np.min(coords[:, 2]) - 10, np.max(coords[:, 2]) + 10, num_points)
+    step = (np.max(coords[:, 2]) - np.min(coords[:, 2])) / num_points
+    x = np.linspace(np.min(coords[:, 0]), np.max(coords[:, 0]),
+                    (np.max(coords[:, 0]) - np.min(coords[:, 0])) / step)
+    y = np.linspace(np.min(coords[:, 1]), np.max(coords[:, 1]),
+                    (np.max(coords[:, 1]) - np.min(coords[:, 1])) / step)
+
+    ps = my_interpolating_function(z)
+
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+
+    data1 = np.zeros((num_atoms, num_e))
+
+    for jj, j in enumerate(ind):
+        # energy, pdos = calc.get_orbital_ldos(a=int(j), npts=num_e)
+        # data[j, :] = pdos
+        energy, pdos = calc.get_lcao_dos(atom_indices=int(j), npts=num_e, width=0.136)
+        data1[jj, :] = pdos
+
+    coords = coords[ind, :]
+    en_ind = np.arange(len(energy))[500:]
+    data = np.zeros((len(x), len(y), len(z), len(en_ind)))
+
+    for jj, j in enumerate(en_ind):
+        print(j)
+        Fq = Invdisttree(coords, data1[:, j])
+        aaa = Fq(np.vstack((X.flatten(), Y.flatten(), Z.flatten())).T, nnear=4, eps=0, p=2).reshape(X.shape)
+        data[:, :, :, jj] = aaa
+
+    # ef = calc.get_fermi_level()
+    plt.contourf(z, energy[en_ind][220:-120], np.mean(data, axis=(0, 1)).T[220:-120], 400, cmap='terrain')
+    plt.xlabel("Distance (angstroms)", fontsize=12)
+    plt.ylabel("Energy (eV)", fontsize=12)
+    plt.xlim([9, 60])
+    plt.ylim([-6.1, -2.7])
+    plt.show()
+
+
 if __name__ == "__main__":
     # from ase.visualize import view
     # # calc = GPAW('/home/mk/gpaw_swarm/si_part_ghosts.gpw')
@@ -397,4 +501,4 @@ if __name__ == "__main__":
     #
     # plt.show()
 
-    main4()
+    main5()
