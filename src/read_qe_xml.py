@@ -158,7 +158,13 @@ def xml2atoms(xml_elem):
 
     input_parameters['input_dft'] = None
     if xml_elem.find('dft') is not None:
-        input_parameters['input_dft'] = xml_elem.find('dft').find('functional').text
+        input_parameters['input_dft'] = xml_elem.find('dft').find('functional').text.lower()
+
+    input_parameters['k_points'] = None
+    if xml_elem.find('band_structure') is not None:
+        k_points = xml_elem.find('band_structure').find('starting_k_points').find('monkhorst_pack').items()
+        k_points = [int(item[1]) for item in k_points]
+        input_parameters['k_points'] = k_points
 
     return atoms, input_parameters
 
