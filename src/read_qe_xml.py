@@ -160,11 +160,17 @@ def xml2atoms(xml_elem):
     if xml_elem.find('dft') is not None:
         input_parameters['input_dft'] = xml_elem.find('dft').find('functional').text.lower()
 
-    # input_parameters['k_points'] = None
-    # if xml_elem.find('band_structure') is not None:
-    #     k_points = xml_elem.find('band_structure').find('starting_k_points').find('monkhorst_pack').items()
-    #     k_points = [int(item[1]) for item in k_points]
-    #     input_parameters['k_points'] = k_points
+    input_parameters['k_points'] = None
+    if xml_elem.find('band_structure') is not None:
+        k_points = xml_elem.find('band_structure').find('starting_k_points').find('monkhorst_pack').items()
+        k_points = [int(item[1]) for item in k_points]
+        input_parameters['k_points'] = k_points
+
+    input_parameters['fft_grid'] = None
+    if xml_elem.find('basis_set') is not None:
+        fft_points = xml_elem.find('basis_set').find('fft_grid').items()
+        fft_points = [int(item[1]) for item in fft_points]
+        input_parameters['fft_grid'] = fft_points
 
     return atoms, input_parameters
 
@@ -221,11 +227,94 @@ def read_qe_xml(fileobj, index=-1, results_required=True):
     return atoms, input_parameters, atoms_list
 
 
+def qe_xml_to_kgrid(file_name, k_points=None, k_offsets=None, q_shifts=None):
+
+    atoms, input_parameters, _ = read_qe_xml(file_name)
+    kgrid = []
+
+    # -------------------------------------------------------------------------
+    # --------------------- collect data from xml file ------------------------
+    # -------------------------------------------------------------------------
+
+    elements = {}
+    indices = []
+    count = 0
+
+    for item in atoms.get_chemical_symbols():
+        if item in elements:
+            indices.append(elements[item])
+        else:
+            count += 1
+            elements[item] = count
+            indices.append(elements[item])
+
+    # cell in alat
+    cell = atoms.get_cell() / atoms.get_cell().tolist()[0][0]
+
+    # positions in alat
+    positions = atoms.get_positions() / atoms.get_cell().tolist()[0][0]
+
+    # fft grid parameters
+    fft_grid = input_parameters['fft_grid']
+
+    # k-grid parameters
+    k_grid = input_parameters['k_points']
+
+    # -------------------------------------------------------------------------
+    # ------------------------ form the input files ---------------------------
+    # -------------------------------------------------------------------------
+
+    if k_points is not None:
+        kgrid.append(' '.join(map(str, k_points)))
+    else:
+        kgrid.append(' '.join(map(str, k_grid[:3])))
+
+    if k_offsets is not None:
+        kgrid.append(' '.join(map(str, k_points)))
+    else:
+        kgrid.append(' '.join(map(str, 0.5*np.array(k_grid[3:]))))
+
+    if q_shifts is not None:
+        kgrid.append(' '.join(map(str, q_shifts)))
+    else:
+        kgrid.append(' '.join(map(str, [0.0, 0.0, 0.0])))
+
+    for item in cell:
+        kgrid.append(' '.join(map(str, item)))
+
+    kgrid.append(str(len(positions)))
+
+    for j, item in enumerate(positions):
+        kgrid.append(str(indices[j]) + ' ' + ' '.join(map(str, item)))
+
+    kgrid.append(' '.join(map(str, fft_grid)))
+    kgrid.append('.false.')
+    kgrid.append('.false.')
+    kgrid.append('.false.')
+
+    return '\n'.join(kgrid)
+
+
+def qe_xml_to_kgrids(file_name, k_points=None, k_offsets=None, q_shifts=None):
+
+    kgrid = qe_xml_to_kgrid(file_name, k_points=k_points, k_offsets=k_offsets)
+    qgrid = qe_xml_to_kgrid(file_name, k_points=k_points, k_offsets=k_offsets, q_shifts=q_shifts)
+
+    with open("kgrid.in", "w") as text_file:
+        text_file.write(kgrid)
+
+    with open("kgrid_q.in", "w") as text_file:
+        text_file.write(qgrid)
+
+
 if __name__ == '__main__':
 
     file_name = '/home/mk/data-file-schema.xml'
     file_name = '/home/mk/tetracene_opt2.xml'
-    file_name1 = '/home/mk/tetracene.xml'
+    file_name1 = '/home/mk/si_slab.xml'
+
+    qe_xml_to_kgrids(file_name1, k_points=[5, 4, 1], q_shifts=[0.001, 0.0, 0.0])
+
     # file_name1 = '/home/mk/tetracene.xml'
     # file_name2 = '/home/mk/tetracene1.xml'
 
@@ -236,7 +325,7 @@ if __name__ == '__main__':
     atoms1, ecut, atoms_list1 = read_qe_xml(file_name1)
 
     # print(len(atoms_list))
-    # view(atoms_list)
+    view(atoms_list1)
 
     etot = [item.get_total_energy() for item in atoms_list]
     etot1 = [item.get_total_energy() for item in atoms_list1]
